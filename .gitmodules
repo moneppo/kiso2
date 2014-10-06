@@ -1,0 +1,9 @@
+[submodule "sdl"]
+	path = sdl
+	url = https://github.com/eddieringle/SDL
+[submodule "libuv"]
+	path = libuv
+	url = https://github.com/joyent/libuv.git
+[submodule "SDL"]
+	path = SDL
+	url = https://github.com/eddieringle/SDL

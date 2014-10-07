@@ -21,6 +21,8 @@ YAML_CPP_OBJECTS = $(YAML_CPP_SOURCES:.cpp=.o)
 SOURCES = $(shell ls *.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
 
+all: $(EXE)
+
 $(LIBUV_PATH)/$(LIBUV_NAME):
 	$(MAKE) -C $(LIBUV_PATH)
 	
@@ -28,8 +30,8 @@ cleandeps:
 	$(MAKE) -C libuv clean
 	
 clean:
-	echo $(YAML_CPP_OBJECTS)
 	rm *.o
+	rm kiso
 	
 $(EXE) : $(OBJECTS) $(YAML_CPP_OBJECTS)
 	$(CXX) $(LDFLAGS) $(RTLIB) $(OBJECTS) $(YAML_CPP_OBJECTS) -o $(EXE)
@@ -37,6 +39,4 @@ $(EXE) : $(OBJECTS) $(YAML_CPP_OBJECTS)
 %.o : %.cpp
 	echo $(YAML_CPP_OBJECTS)
 	$(CXX) $(CXX_FLAGS) $(JNI) -c $< -o $@
-	
-all: $(EXE)
 

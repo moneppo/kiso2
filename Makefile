@@ -9,7 +9,7 @@ OS_NAME=$(shell uname -s)
 ifeq (${OS_NAME},Darwin)
 	RTLIB=
 	JNI = -I/System/Library/Frameworks/JavaVM.framework/Headers
-	LDFLAGS = -framework CoreFoundation -framework CoreServices -framework JavaVM -L/usr/local/lib/ -lcairo $(LIBUV_PATH)/$(LIBUV_NAME)
+	LDFLAGS = -framework CoreFoundation -framework CoreServices -framework JavaVM -L/usr/local/lib/ -lcairo -framework SDL2 $(LIBUV_PATH)/$(LIBUV_NAME)
 else
 	RTLIB=-lrt
 	JNI=
@@ -37,6 +37,5 @@ $(EXE) : $(OBJECTS) $(YAML_CPP_OBJECTS)
 	$(CXX) $(LDFLAGS) $(RTLIB) $(OBJECTS) $(YAML_CPP_OBJECTS) -o $(EXE)
 
 %.o : %.cpp
-	echo $(YAML_CPP_OBJECTS)
 	$(CXX) $(CXX_FLAGS) $(JNI) -c $< -o $@
 

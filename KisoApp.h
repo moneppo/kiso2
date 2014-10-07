@@ -1,3 +1,6 @@
+#ifndef KisoApp_Header
+#define KisoApp_Header
+
 #include <jni.h>
 #include "yaml-cpp/yaml.h"
 #include <string>
@@ -9,7 +12,6 @@ class KisoApp {
 public:
   KisoApp(std::string uri, std::string storageLocation);
 	virtual ~KisoApp();
-	void start();
 	
 	uv_loop_t* loop() { return &m_loop; }
 	std::string storageLocation() { return m_storageLocation; }
@@ -19,9 +21,10 @@ public:
 	JNIEnv* vm() { return m_env; }
 	//KisoRenderer* renderer() { return m_renderer; }
 	
-protected:
-	static void renderCallback(uv_timer_t* handle);
 	void startVM();
+	
+protected:
+
 	void createVM();
 	static void VMCallback(void* arg);
   
@@ -34,3 +37,5 @@ protected:
 	std::string m_appKey;
 	JNIEnv* m_env;
 };
+
+#endif

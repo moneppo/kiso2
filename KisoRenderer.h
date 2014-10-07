@@ -1,6 +1,10 @@
+#ifndef KisoRenderer_Header
+#define KisoRenderer_Header
+
 #include "yaml-cpp/yaml.h"
 #include "vector.h"
 #include "cairo.h"
+#include "KisoApp.h"
 
 namespace YAML {
 	static Node operator|=(Node a, const Node &b) {
@@ -19,24 +23,24 @@ namespace YAML {
 class KisoRenderer {
 public:
   KisoRenderer();
-  void setPresentation( YAML::Node& presentation );
   YAML::Node& presentation();
+	void queueRender( cairo_t* cr, KisoApp* app );
   
 private:
 	YAML::Node mergeNodes( YAML::Node base, YAML::Node overlay1, YAML::Node overlay2 );
 	
-	void drawBorder( YAML::Node& style, YAML::Node& layout );             
-	void drawBackground( YAML::Node& style, YAML::Node& layout );
+	void drawBorder( cairo_t* cr, YAML::Node& style, YAML::Node& layout );             
+	void drawBackground( cairo_t* cr,  YAML::Node& style, YAML::Node& layout );
 	
 	YAML::Node computeLayout( std::string name, YAML::Node node, YAML::Node& parent );
 	YAML::Node computeStyle( std::string name, YAML::Node node, YAML::Node& parent );
-
 	
-  void drawNode( YAML::Node& node, YAML::Node& style, YAML::Node& layout );
-	void draw2DChildren( YAML::Node& node );
-	void drawGridChildren( YAML::Node& node, YAML::Node& layout ) ;
-  void drawFillChildren( YAML::Node& node, YAML::Node& layout ) ;
-	cairo_t* m_cr;
+  void drawNode( cairo_t* cr,  YAML::Node& node, YAML::Node& style, YAML::Node& layout );
+	void draw2DChildren( cairo_t* cr,  YAML::Node& node );
+	void drawGridChildren( cairo_t* cr,  YAML::Node& node, YAML::Node& layout ) ;
+  void drawFillChildren( cairo_t* cr,  YAML::Node& node, YAML::Node& layout ) ;
 	YAML::Node m_presentation;
   cairo_matrix_t buildTransform(YAML::Node& element );
 };
+
+#endif

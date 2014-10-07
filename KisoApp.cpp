@@ -19,27 +19,14 @@ KisoApp::KisoApp( string uri, string storageLocation ) :
 	m_structure = root["structure"];
 	m_presentation = root["presentation"];
 	
-	uv_loop_init( &m_loop );
+	//uv_loop_init( &m_loop );
 		
 	// m_renderer = new KisoRenderer(m_loop);
 }
   
 KisoApp::~KisoApp() { 
-	uv_loop_close( &m_loop );
+	//uv_loop_close( &m_loop );
 	// delete m_renderer;
-}
-
-void KisoApp::renderCallback(uv_timer_t* handle)
-{
-	
-	KisoApp* self = (KisoApp*) handle->data;
-  // m_renderer->queueRender(self);
-	
-	// This goes into the renderer
-  // YAML::Node presentation = app->presentation()->clone();
-  // YAML::Node structure = app->structure()->clone();
-	// setPresentation( presentation );
-	// drawNode( structure );
 }
 
 void KisoApp::createVM() {
@@ -55,25 +42,6 @@ void KisoApp::createVM() {
 	args.ignoreUnrecognized = JNI_FALSE;
 
 	JNI_CreateJavaVM(&jvm, (void **)&m_env, &args);
-}
-
-
-void KisoApp::start()
-{
-	uv_timer_t renderHandle;
-	uv_timer_init(&m_loop, &renderHandle);
-	
-	renderHandle.data = (void*) this;
-	
-	uv_timer_start(
-		&renderHandle,
-		&renderCallback,
-    0,
-   	1000 / FPS);
-	
-	startVM();
-	
-	uv_run(&m_loop, UV_RUN_DEFAULT);
 }
 
 void KisoApp::startVM() 

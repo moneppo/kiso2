@@ -27,8 +27,7 @@ public:
 		
 		glfwSetKeyCallback(m_window, keyEvent);
 		glfwMakeContextCurrent(m_window);
-		
-		
+				
 		glfwGetWindowSize(m_window, &m_windowSize.x, &m_windowSize.y);
 		glfwGetFramebufferSize(m_window, &m_frameBufferSize.x, &m_frameBufferSize.x);
 		m_aspectRatio = (float)m_frameBufferSize.x / (float)m_frameBufferSize.x;

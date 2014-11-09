@@ -10,7 +10,7 @@ KisoApp::KisoApp( string uri, string storageLocation ) :
   // 1. Look at the manifest file
   // 2. Check for any updates from the current version
   // 3. Download new resources if needed
-	m_manifest = YAML::Node("");
+	m_manifest = YAML::Load("");
 		
 	m_appKey = "";
 	

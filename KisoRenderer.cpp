@@ -2,20 +2,36 @@
 
 using namespace std;
 
-KisoRenderer::KisoRenderer()
+KisoRenderer::KisoRenderer(vec2d size, vec2d aspectRatio, bool debug = false) :
+	m_size(size), m_aspectRatio(aspectRatio)
 {
+	int flags = NVG_ANTIALIAS | NVG_STENCIL_STROKES;
+	if (debug) {
+		flags |= NVG_DEBUG;
+	}
+	m_vg = nvgCreateGL3(flags);
+
+	if (m_vg == NULL) {
+		cerr << "Could not init nanovg." << endl;
+		throw -1;
+	}
 }
 
-cairo_matrix_t KisoRenderer::buildTransform( YAML::Node& layout )
-{
+KisoRenderer::~KisoRenderer() {
+	nvgDeleteGL3(m_vg);
 }
 
-void KisoRenderer::queueRender( cairo_t* cr, KisoApp* app)
+mat2x3f KisoRenderer::buildTransform( YAML::Node& layout )
+{
+	return mat2x3f();
+}
+
+void KisoRenderer::render( KisoApp* app )
 {
   YAML::Node presentation = YAML::Clone(*(app->presentation()));
 	YAML::Node style = presentation["style"];
 	YAML::Node layout = presentation["layout"];
-	drawNode( cr, *(app->structure()), style, layout );
+	drawNode( *(app->structure()), style, layout );
 }
 
 YAML::Node KisoRenderer::mergeNodes(YAML::Node base, YAML::Node overlay1, YAML::Node overlay2)
@@ -27,39 +43,63 @@ YAML::Node KisoRenderer::mergeNodes(YAML::Node base, YAML::Node overlay1, YAML::
 	return output;
 }
 
-void KisoRenderer::drawBorder( cairo_t* cr,  YAML::Node& style, YAML::Node& layout )
+void KisoRenderer::drawBorder( YAML::Node& style, YAML::Node& layout )
 {
-  double width   = style["border-width"].as<double>();
-  vec4d color    = style["border-color"].as<vec4d>();
+  float width   = style["border-width"].as<float>();
+	float radius  = 0;
+	// Shouldn't be 'try'. Should load initial, customizable style sheet 
+	// for defaults, which must set all possible values.
+	try {
+		radius = style["border-radius"].as<float>(); 
+	} catch(...);
+	
+  NVGcolor color = style["border-color"].as<NVGcolor>();
   vec3d position = layout["position"].as<vec3d>();
   vec2d size     = layout["size"].as<vec2d>();
   
-  cairo_set_source_rgba( cr, color.r, color.g, color.b, color.a );
-  cairo_set_line_width( cr, width );
-  cairo_rectangle( cr, position.x, position.y, size.x, size.y );
-  cairo_stroke( cr );
+	nvgStrokeColor(m_vg, color);
+  nvgStrokeWidth(m_vg, width);
+	nvgBeginPath(m_vg);
+	nvgRoundedRect(m_vg, position.x, position.y, size.x, size.y, radius);
+ 	nvgStroke(m_vg);
 }
 
-void KisoRenderer::drawBackground( cairo_t* cr,  YAML::Node& style, YAML::Node& layout )
+int KisoRenderer::locateImage(string filename) {
+	int img;
+	NVGImageMap::iterator imgIt = m_images.find(filename);
+	if (imgIt == m_images.end()) {
+		img = nvgCreateImage(vg, filename, 0);
+		m_images[filename] = img;
+	} else {
+		img = imgIt->second;
+	}
+	return img;
+}
+
+void KisoRenderer::drawBackground( YAML::Node& style, YAML::Node& layout )
 {
-  vec4d color     = style["background-color"].as<vec4d>();
+  NVGcolor color  = style["background-color"].as<NVGcolor>();
   string filename = style["background-image"].as<string>();
   vec2d size      = layout["size"].as<vec2d>();
   vec3d position  = layout["position"].as<vec3d>();
+	// TODO: Implement offset & angle, and add ability to set size of image
+	vec2d offset    = vec2d();
+	float angle = 0;
+	float alpha = 1.0;
   
   if (filename != "") {
-    cairo_surface_t *img = cairo_image_surface_create_from_png( filename.c_str() );
-    cairo_save( cr );
-    cairo_translate( cr, position.x, position.y );
-    cairo_set_source_surface( cr, img, size.x, size.y );
-    cairo_paint( cr );
-    cairo_surface_destroy( img );
-    cairo_restore( cr );
+		int img = locateImage(filename);
+		NVGPaint paint = nvgImagePattern(
+			m_vg, offset.x, offset.y, 
+			size.x, size.y, angle, img, alpha);
+		nvgFillPaint(m_vg, paint);
   } else {
-    cairo_set_source_rgba( cr, color.r, color.g, color.b, color.a );
-    cairo_rectangle( cr, position.x, position.y, size.x, size.y );
-    cairo_fill( cr );
+   	nvgFillColor(m_nvg, color);
   }
+	
+	// TODO: Rounded amount
+	nvgRoundedRect(m_vg, position.x, position.y, size.x, size.y, 0);
+	nvgFill(m_vg);
 }
 
 YAML::Node KisoRenderer::computeLayout( string name, YAML::Node node, YAML::Node& parent )
@@ -82,7 +122,7 @@ YAML::Node KisoRenderer::computeStyle( string name,YAML::Node node, YAML::Node& 
   return mergeNodes( globalStyle, childStyle, localStyle );
 }
 
-void KisoRenderer::drawGridChildren( cairo_t* cr,  YAML::Node& node, YAML::Node& layout ) 
+void KisoRenderer::drawGridChildren( YAML::Node& node, YAML::Node& layout ) 
 {
   for ( YAML::const_iterator it = node.begin(); it!=node.end(); ++it )
   {
@@ -107,7 +147,7 @@ void KisoRenderer::drawGridChildren( cairo_t* cr,  YAML::Node& node, YAML::Node&
   }
 }
 
-void KisoRenderer::drawFillChildren( cairo_t* cr,  YAML::Node& node, YAML::Node& layout ) 
+void KisoRenderer::drawFillChildren( YAML::Node& node, YAML::Node& layout ) 
 {
   vec2d pos( 0, 0 );
   double rowHeight = 0;
@@ -145,7 +185,7 @@ void KisoRenderer::drawFillChildren( cairo_t* cr,  YAML::Node& node, YAML::Node&
   }
 }
 
-void KisoRenderer::draw2DChildren( cairo_t* cr, YAML::Node& node ) 
+void KisoRenderer::draw2DChildren( YAML::Node& node ) 
 {
   for ( YAML::const_iterator it = node.begin(); it!=node.end(); ++it )
   {
@@ -161,15 +201,15 @@ void KisoRenderer::draw2DChildren( cairo_t* cr, YAML::Node& node )
 }
 
 
-void KisoRenderer::drawNode( cairo_t* cr, YAML::Node& node, YAML::Node& style, YAML::Node& layout ) 
+void KisoRenderer::drawNode( YAML::Node& node, YAML::Node& style, YAML::Node& layout ) 
 {
 
   // 0. Push matrix
-  cairo_save( cr );
+  nvgSave(m_vg);
   
   // 1. Apply transform
-  cairo_matrix_t mat = buildTransform( layout );
-  cairo_set_matrix( cr, &mat );
+	mat2x3f mat = buildTransform(layout);
+	nvgTransform(m_vg, mat.a, mat.b, mat.c, mat.d, mat.e, mat.f);
 
   // 2. Draw shadow
   //drawShadow( cr, style, layout );
@@ -204,5 +244,5 @@ void KisoRenderer::drawNode( cairo_t* cr, YAML::Node& node, YAML::Node& style, Y
   // 9. Paint to surface
   
   // 10. Pop Matrix
-  cairo_restore( cr );
+  nvgRestore(m_vg);
 }

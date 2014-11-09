@@ -3,8 +3,14 @@
 
 #include "yaml-cpp/yaml.h"
 #include "vector.h"
-#include "cairo.h"
+#include "nanovg.h"
+#include "nanovg_gl.h"
 #include "KisoApp.h"
+#include "NVGYAML.h"
+#include <string>
+#include <unordered_map>
+
+typedef std::unordered_map<std::string, int> NVGImageMap;
 
 namespace YAML {
 	static Node operator|=(Node a, const Node &b) {
@@ -19,28 +25,33 @@ namespace YAML {
 	}
 }
 
-
 class KisoRenderer {
 public:
-  KisoRenderer();
+  KisoRenderer(vec2d size, vec2d aspectRatio, bool debug = false);
+	virtual ~KisoRenderer();
   YAML::Node& presentation();
-	void queueRender( cairo_t* cr, KisoApp* app );
+	void render( KisoApp* app );
   
 private:
 	YAML::Node mergeNodes( YAML::Node base, YAML::Node overlay1, YAML::Node overlay2 );
 	
-	void drawBorder( cairo_t* cr, YAML::Node& style, YAML::Node& layout );             
-	void drawBackground( cairo_t* cr,  YAML::Node& style, YAML::Node& layout );
+	void drawBorder( YAML::Node& style, YAML::Node& layout );             
+	void drawBackground( YAML::Node& style, YAML::Node& layout );
 	
 	YAML::Node computeLayout( std::string name, YAML::Node node, YAML::Node& parent );
 	YAML::Node computeStyle( std::string name, YAML::Node node, YAML::Node& parent );
 	
-  void drawNode( cairo_t* cr,  YAML::Node& node, YAML::Node& style, YAML::Node& layout );
-	void draw2DChildren( cairo_t* cr,  YAML::Node& node );
-	void drawGridChildren( cairo_t* cr,  YAML::Node& node, YAML::Node& layout ) ;
-  void drawFillChildren( cairo_t* cr,  YAML::Node& node, YAML::Node& layout ) ;
+  void drawNode( YAML::Node& node, YAML::Node& style, YAML::Node& layout );
+	void draw2DChildren( YAML::Node& node );
+	void drawGridChildren( YAML::Node& node, YAML::Node& layout ) ;
+  void drawFillChildren( YAML::Node& node, YAML::Node& layout ) ;
 	YAML::Node m_presentation;
-  cairo_matrix_t buildTransform(YAML::Node& element );
+  mat2x3f buildTransform(YAML::Node& element );
+	
+	NVGcontext* m_vg;
+	vec2d m_size;
+	vec2d m_aspectRatio;
+	NVGImageMap m_images;
 };
 
 #endif

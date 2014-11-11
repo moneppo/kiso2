@@ -1,4 +1,5 @@
 #include "KisoApp.h"
+#include <iostream>
 
 using namespace std;
 
@@ -15,13 +16,11 @@ KisoApp::KisoApp( string uri, string storageLocation ) :
 	m_appKey = "";
 	
   // 4. Parse YAML, build layout
-	YAML::Node root = YAML::Node("");
+	YAML::Node root = YAML::Load("{structure:, presentation:}");
 	m_structure = root["structure"];
 	m_presentation = root["presentation"];
-	
 	//uv_loop_init( &m_loop );
-		
-	// m_renderer = new KisoRenderer(m_loop);
+	
 }
   
 KisoApp::~KisoApp() { 

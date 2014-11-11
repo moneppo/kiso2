@@ -1,19 +1,22 @@
-LIBUV_PATH = libuv
-LIBUV_NAME=.libs/libuv.a
+LIBUV_PATH = libuv/build/Release/
+LIBUV_NAME=libuv.a
 YAML_CPP_PATH=yaml-cpp
 EXE=kiso
 
-CXX_FLAGS = -std=gnu++0x -g -O0 -I$(LIBUV_PATH)/include -I$(YAML_CPP_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I$(YAMP_CPP_PATH)/include -I/usr/local/include/cairo -Wno-deprecated-declarations
+GLFW_CFLAGS = $(shell pkg-config --cflags glfw3)
+GLFW_LDFLAGS = $(shell pkg-config --static --libs glfw3)
+
+CXX_FLAGS = -std=gnu++0x -g -O0 -I$(LIBUV_PATH)/include -I$(YAML_CPP_PATH)/include -I$(HTTP_PARSER_PATH) -I. -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I$(YAMP_CPP_PATH)/include -Inanovg/src -Wno-deprecated-declarations $(GLFW_CFLAGS)
 
 OS_NAME=$(shell uname -s)
 ifeq (${OS_NAME},Darwin)
 	RTLIB=
 	JNI = -I/System/Library/Frameworks/JavaVM.framework/Headers
-	LDFLAGS = -framework CoreFoundation -framework CoreServices -framework JavaVM -L/usr/local/lib/ -lcairo -framework SDL2 $(LIBUV_PATH)/$(LIBUV_NAME)
+	LDFLAGS = -framework CoreFoundation -framework CoreServices -framework JavaVM -L/usr/local/lib/ $(LIBUV_PATH)/$(LIBUV_NAME) -framework Carbon -framework OpenGL nanovg/build/libnanovg.a $(GLFW_LDFLAGS)
 else
 	RTLIB=-lrt
 	JNI=
-	LDFLAGS = -lcairo -L/usr/local/lib/ -l$(LIBUV_PATH)/$(LIBUV_NAME)
+	LDFLAGS = -lnanovg -L/usr/local/lib/ -l$(LIBUV_PATH)/$(LIBUV_NAME) -lGL -lGLU nanovg/build/libnanovg.a
 endif
 
 YAML_CPP_SOURCES=$(shell ls $(YAML_CPP_PATH)/src/*.cpp)

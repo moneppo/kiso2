@@ -19,7 +19,6 @@ public:
 	YAML::Node* presentation() { return &m_presentation; }
 	YAML::Node* structure() { return &m_structure; }
 	JNIEnv* vm() { return m_env; }
-	//KisoRenderer* renderer() { return m_renderer; }
 	
 	void startVM();
 	
@@ -32,7 +31,6 @@ protected:
   YAML::Node m_presentation;
 	YAML::Node m_manifest;
 	uv_loop_t m_loop;
-	//KisoRenderer* m_renderer;
 	std::string m_storageLocation;
 	std::string m_appKey;
 	JNIEnv* m_env;

@@ -3,10 +3,16 @@
 
 #include "yaml-cpp/yaml.h"
 #include "vector.h"
+#ifdef __APPLE__
+	#include <OpenGL/gl.h>
+#endif
+
 #include "nanovg.h"
-#include "nanovg_gl.h"
+
 #include "KisoApp.h"
 #include "NVGYAML.h"
+
+#include <iostream>
 #include <string>
 #include <unordered_map>
 
@@ -27,13 +33,15 @@ namespace YAML {
 
 class KisoRenderer {
 public:
-  KisoRenderer(vec2d size, vec2d aspectRatio, bool debug = false);
+  KisoRenderer(vec2i size, float aspectRatio, bool debug = false);
 	virtual ~KisoRenderer();
   YAML::Node& presentation();
 	void render( KisoApp* app );
   
 private:
 	YAML::Node mergeNodes( YAML::Node base, YAML::Node overlay1, YAML::Node overlay2 );
+	
+	int locateImage(std::string filename);
 	
 	void drawBorder( YAML::Node& style, YAML::Node& layout );             
 	void drawBackground( YAML::Node& style, YAML::Node& layout );
@@ -49,7 +57,7 @@ private:
   mat2x3f buildTransform(YAML::Node& element );
 	
 	NVGcontext* m_vg;
-	vec2d m_size;
+	vec2i m_size;
 	vec2d m_aspectRatio;
 	NVGImageMap m_images;
 };

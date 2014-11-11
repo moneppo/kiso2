@@ -1,8 +1,14 @@
+#ifndef KISO_VECTOR
+#define KISO_VECTOR
+
 #include "yaml-cpp/yaml.h"
 
+#define SAFEFIND(r, k, d) (r[k]!=NULL?r[k].as<typeof d>():d)
+//#define SAFEFIND(r,k,d) d
+
 struct vec4d {
-	vec4d(double _x = 0.0d, double _y = 0.0d, 
-				double _z = 0.0d, double _w = 0.0d) {
+	vec4d(double _x = 0.0, double _y = 0.0, 
+				double _z = 0.0, double _w = 0.0) {
 		x = _x;
 		y = _y;
 		z = _z;
@@ -49,7 +55,7 @@ union vec4f {
 };
 
 struct vec3d {
-	vec3d(double _x = 0.0d, double _y = 0.0d, double _z = 0.0d) {
+	vec3d(double _x = 0.0, double _y = 0.0, double _z = 0.0) {
 		x = _x;
 		y = _y;
 		z = _z;
@@ -72,7 +78,7 @@ struct vec3d {
 
 
 struct vec2d {
-	vec2d(double _x = 0.0d, double _y = 0.0d) {
+	vec2d(double _x = 0.0, double _y = 0.0) {
 		x = _x;
 		y = _y;
 	}
@@ -103,8 +109,8 @@ union mat2x3f {
 	float data[6];
 	struct {
 		float a, b, c, d, e, f;
-	}
-}
+	};
+};
 
 namespace YAML {
 	template<>
@@ -155,57 +161,38 @@ namespace YAML {
 		}
 
 		static bool decode(const Node& node, vec3d& rhs) {
-			if(!node.IsSequence()) {
-				return false;
-			}
 			rhs.x = rhs.y = rhs.z = 0;
-
-			int size = node.size();
-			if (size >= 1) {
-				rhs.x = node[0].as<double>();
+			
+			if(node.IsNull()) {
+				return true;
 			}
+			
+			if(node.IsSequence()) {		
+				
+				int size = node.size();
+				if (size >= 1) {
+					rhs.x = node[0].as<double>();
+				}
 
-			if (size >= 2) {
-				rhs.y = node[1].as<double>();
+				if (size >= 2) {
+					rhs.y = node[1].as<double>();
+				}
+
+				if (size >= 3) {
+					rhs.z = node[2].as<double>();
+				}
+
+				return true;
 			}
-
-			if (size >= 3) {
-				rhs.z = node[2].as<double>();
+			
+			if(node.IsMap()) {
+				rhs.x = SAFEFIND(node, "x", 0);
+				rhs.y = SAFEFIND(node, "y", 0);
+				rhs.z = SAFEFIND(node, "z", 0);
+				return true;
 			}
-
-			return true;
-		}
-	};
-	
-	struct convert<vec3f> {
-		static Node encode(const vec3f& rhs) {
-			Node node;
-			node.push_back(rhs.x);
-			node.push_back(rhs.y);
-			node.push_back(rhs.z);
-			return node;
-		}
-
-		static bool decode(const Node& node, vec3f& rhs) {
-			if(!node.IsSequence()) {
-				return false;
-			}
-			rhs.x = rhs.y = rhs.z = 0;
-
-			int size = node.size();
-			if (size >= 1) {
-				rhs.x = node[0].as<float>();
-			}
-
-			if (size >= 2) {
-				rhs.y = node[1].as<float>();
-			}
-
-			if (size >= 3) {
-				rhs.z = node[2].as<float>();
-			}
-
-			return true;
+			
+			return false;
 		}
 	};
 
@@ -265,3 +252,5 @@ namespace YAML {
 		}
 	};
 }
+
+#endif

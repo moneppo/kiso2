@@ -1,9 +1,15 @@
+#ifndef KISOGLFWVIEWER
+#define KISOGLFWVIEWER
+
 #include <iostream>
 #ifdef __APPLE__
 	#define GLFW_INCLUDE_GLCOREARB
 #endif
 #include <GLFW/glfw3.h>
 #include "nanovg.h"
+
+#include "KisoRenderer.h"
+#include "KisoApp.h"
 
 #define NANOVG_GL3_IMPLEMENTATION
 #include "vector.h"
@@ -12,7 +18,7 @@ using namespace std;
 
 class KisoGLFWViewer {
 public:
-	KisoGFLWViewer(bool debug = false) {
+	KisoGLFWViewer(bool debug = false) {
 		if (!glfwInit()) {
 			cerr << "Failed to init GLFW." << endl;
 			throw -1;
@@ -37,7 +43,7 @@ public:
 		m_renderer = new KisoRenderer(m_windowSize, m_aspectRatio, debug);
 	}
 	
-	virtual ~KisoGFLWViewer() {
+	virtual ~KisoGLFWViewer() {
 		delete m_renderer;
 		glfwTerminate();
 	}
@@ -47,9 +53,11 @@ public:
 		{
 			glfwGetCursorPos(m_window, &m_mouse.x, &m_mouse.y);
 
-			m_renderer.render(app);
+			m_renderer->render(app);
 
 			glfwSwapBuffers(m_window);
+			
+			glfwPollEvents();
 		}
 		return 0;
 	}
@@ -65,9 +73,11 @@ protected:
 	GLFWwindow* m_window;
 
 	vec2d m_mouse;
-	vec2d m_windowSize;
-	vec2d m_framebufferSize;
+	vec2i m_windowSize;
+	vec2i m_frameBufferSize;
 	float m_aspectRatio;
 	
 	KisoRenderer* m_renderer;
 };
+
+#endif
